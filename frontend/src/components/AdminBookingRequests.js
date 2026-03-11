@@ -6,6 +6,19 @@ export default function AdminBookingRequests({
   approveBooking,
   rejectBooking
 }) {
+
+const isCourtPlaying = (req) => {
+  const nowHour = new Date().getHours();
+
+  const startHour = parseInt(req.hour);
+  const endHour = startHour + (req.duration || 1);
+
+  return (
+    req.status === "approved" &&
+    nowHour >= startHour &&
+    nowHour < endHour
+  );
+};
 const [expandedId, setExpandedId] = useState(null);
   return (
     <section style={{ padding: "40px 10%" }}>
@@ -46,23 +59,15 @@ const [expandedId, setExpandedId] = useState(null);
           <td>{req.date}</td>
           <td>{startHour}:00 - {endHour}:00</td>
 
-          <td
-            style={{
-              fontWeight: "bold",
-              color:
-                req.status === "approved"
-                  ? "green"
-                  : req.status === "rejected"
-                  ? "red"
-                  : "orange"
-            }}
-          >
-            {req.status === "approved"
-              ? "Đã duyệt"
-              : req.status === "rejected"
-              ? "Đã hủy"
-              : "Chờ duyệt"}
-          </td>
+<td className={`status-${req.status}`}>
+  {isCourtPlaying(req)
+    ? "🟢 Đang hoạt động"
+    : req.status === "pending"
+    ? "Chờ duyệt"
+    : req.status === "approved"
+    ? "Đã duyệt"
+    : "Đã hủy"}
+</td>
 
           <td>
             <button
@@ -83,7 +88,16 @@ const [expandedId, setExpandedId] = useState(null);
                 <p><strong>SĐT:</strong> {req.phone}</p>
                 <p><strong>Số giờ:</strong> {duration} giờ</p>
                 <p><strong>Tổng tiền:</strong> {req.total?.toLocaleString()} VNĐ</p>
-
+                {req.paymentImage && (
+                  <div style={{marginTop:"10px"}}>
+                    <p><strong>Ảnh chuyển tiền:</strong></p>
+                  <img
+                    src={req.paymentImage}
+                    alt="payment"
+                    style={{width:"200px",borderRadius:"8px"}}
+                  />
+                  </div>
+)}
                 {req.status === "pending" && (
                   <div style={{ marginTop: "10px" }}>
                     <button
@@ -101,6 +115,7 @@ const [expandedId, setExpandedId] = useState(null);
                       Hủy
                     </button>
                   </div>
+                  
                 )}
               </div>
             </td>
