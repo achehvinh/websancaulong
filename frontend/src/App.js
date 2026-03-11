@@ -134,7 +134,7 @@ const handleAvatarChange = (e) => {
   const unreadCount = bookingRequests.filter(
     req => req.status === "pending"
   ).length;
-  
+
 useEffect(() => {
   const savedBookings = JSON.parse(localStorage.getItem("bookingHistory")) || [];
   setBookingRequests(savedBookings);
@@ -369,6 +369,13 @@ useEffect(() => {
       }
     }
   });
+
+  useEffect(() => {
+  const storedBookings =
+    JSON.parse(localStorage.getItem("bookingRequests")) || [];
+
+  setBookingRequests(storedBookings);
+}, []);
   useEffect(() => {
   localStorage.setItem("schedule", JSON.stringify(schedule));
 }, [schedule]);
@@ -518,28 +525,29 @@ useEffect(() => {
     // --- BỔ SUNG LOGIC ĐẶT SÂN ---
 const handleBooking = (newBooking) => {
 
-  // lấy lịch sử cũ
-  const oldBookings = JSON.parse(localStorage.getItem("bookingHistory")) || [];
+  const storedBookings =
+    JSON.parse(localStorage.getItem("bookingRequests")) || [];
 
-  // lọc những booking cùng ngày của user
-  const todayBookings = oldBookings.filter(
-    (b) => b.customerName === newBooking.customerName && b.date === newBooking.date
+  // kiểm tra 1 khách chỉ đặt 2 lần / ngày
+  const sameDayBookings = storedBookings.filter(
+    (b) =>
+      b.customerName === newBooking.customerName &&
+      b.date === newBooking.date
   );
 
-  // giới hạn 2 lần / ngày
-  if (todayBookings.length >= 2) {
+  if (sameDayBookings.length >= 2) {
     alert("Một khách chỉ được đặt tối đa 2 lần trong ngày!");
     return;
   }
 
-  // thêm booking mới
-  const updatedBookings = [...oldBookings, newBooking];
+  const updatedBookings = [...storedBookings, newBooking];
 
-  // lưu localStorage
-  localStorage.setItem("bookingHistory", JSON.stringify(updatedBookings));
-
-  // cập nhật state
   setBookingRequests(updatedBookings);
+
+  localStorage.setItem(
+    "bookingRequests",
+    JSON.stringify(updatedBookings)
+  );
 
   alert("Đặt sân thành công!");
 };
