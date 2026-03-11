@@ -1,4 +1,5 @@
   import { useState, useEffect } from 'react';
+  
   import CourtCard from "./components/CourtCard";
   import BookingModal from "./components/BookingModal";
   import SuccessPopup from "./components/SuccessPopup";
@@ -114,10 +115,17 @@ const handleAvatarChange = (e) => {
   );
 
   const cancelBooking = (id) => {
-  const updated = bookingRequests.filter(req => req.id !== id);
+
+  const updated = bookingRequests.filter(
+    booking => booking.id !== id
+  );
 
   setBookingRequests(updated);
-  localStorage.setItem("bookingRequests", JSON.stringify(updated));
+
+  localStorage.setItem(
+    "bookingRequests",
+    JSON.stringify(updated)
+  );
 };
 
   // 🔔 THÔNG BÁO ADMIN
