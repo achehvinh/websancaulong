@@ -7,9 +7,12 @@ export default function BookingHistory({
   adminPhone
 }) {
 
-  const myBookings = bookingRequests.filter(
-    req => req.customerName === user?.name
-  );
+ const myBookings = bookingRequests.filter(
+  req => req.customerName === user?.username
+);
+
+  console.log("User:", user);
+console.log("Bookings:", bookingRequests);
 
   return (
     <section style={{ padding: "40px 10%" }}>
@@ -55,23 +58,21 @@ export default function BookingHistory({
                       : "Chưa tính"}
                   </td>
 
-                  <td
-                    style={{
-                      fontWeight: "bold",
-                      color:
-                        req.status === "approved"
-                          ? "green"
-                          : req.status === "rejected"
-                          ? "red"
-                          : "orange"
-                    }}
-                  >
-                    {req.status === "approved"
-                      ? "Đã duyệt"
-                      : req.status === "rejected"
-                      ? "Đã hủy"
-                      : "Đang chờ duyệt"}
-                  </td>
+<td
+  style={{
+    fontWeight: "bold",
+    color:
+      req.status === "approved"
+        ? "green"
+        : req.status === "rejected"
+        ? "red"
+        : "orange"
+  }}
+>
+  {req.status === "pending" && "Chờ duyệt"}
+  {req.status === "approved" && "Đã duyệt"}
+  {req.status === "rejected" && "Đã hủy"}
+</td>
 
                   <td>
                     {req.status === "pending" && (
