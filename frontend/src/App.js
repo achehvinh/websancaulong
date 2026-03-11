@@ -83,7 +83,19 @@
   const [avatar, setAvatar] = useState(
     localStorage.getItem("avatar") || null
   );
+const handleAvatarChange = (e) => {
+  const file = e.target.files[0];
 
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onloadend = () => {
+    setAvatar(reader.result);
+  };
+
+  reader.readAsDataURL(file);
+};
   const [accounts, setAccounts] = useState(
     JSON.parse(localStorage.getItem("accounts")) || []
   );
@@ -121,6 +133,20 @@
       setGeneratedOtp(savedOtp);
     }
   }, []);
+
+useEffect(() => {
+  const savedUser = localStorage.getItem("currentUser");
+  const savedAvatar = localStorage.getItem("avatar");
+
+  if (savedUser) {
+    setUser(JSON.parse(savedUser));
+    setIsLoggedIn(true);
+  }
+
+  if (savedAvatar) {
+    setAvatar(savedAvatar);
+  }
+}, []);
   useEffect(() => {
 
     const saved = localStorage.getItem("notifications");
@@ -187,6 +213,12 @@
     }
 
   }, []);
+
+  const saveAvatar = () => {
+  localStorage.setItem("avatar", avatar);
+  alert("Đã lưu ảnh đại diện!");
+};
+
   useEffect(() => {
 
     const handleClickOutside = (event) => {
@@ -424,6 +456,8 @@
       role: "customer"
     };
 
+    
+
     setUser(loggedUser);
 
     setIsLoggedIn(true);
@@ -501,15 +535,7 @@ const handleBooking = (court) => {
     status: "pending",
     customerName: user.name
   };
-
-  setBookingRequests(prev => [...prev, newRequest]);
-
-  alert("Đặt sân thành công!");
-
-  setSelectedCourt(null);
-  setSelectedDate("");
-  setSelectedHour("");
-  setDuration(1);
+  
 };
 
     // --- BỔ SUNG LOGIC DUYỆT ĐƠN (ADMIN) ---
@@ -879,7 +905,11 @@ const handleBooking = (court) => {
         onClick={() => setShowUserMenu(!showUserMenu)}
       >
         {avatar ? (
-          <img src={avatar} alt="avatar" />
+          <img
+  src={avatar || "/avatar.png"}
+  className="avatar"
+  alt="avatar"
+/>
         ) : (
       <div className="avatar-placeholder">
     <svg
@@ -907,8 +937,10 @@ const handleBooking = (court) => {
             <input
               type="file"
               accept="image/*"
+              
               hidden
               onChange={(e) => {
+                
 
                 const file = e.target.files[0];
                 if (!file) return;
@@ -946,7 +978,7 @@ const handleBooking = (court) => {
               setUser(null);
               setAvatar(null);
               localStorage.removeItem("avatar");
-
+              localStorage.removeItem("currentUser");
               setShowUserMenu(false);
               setPage("home");
 
