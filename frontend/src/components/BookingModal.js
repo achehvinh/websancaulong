@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
  
 export default function BookingModal({
+  user,
   selectedCourt,
   selectedDate,
   setSelectedDate,
@@ -251,10 +252,32 @@ export default function BookingModal({
             <div className="success-box">
               <h3>✅ Yêu cầu đặt sân đã gửi thành công!</h3>
               <p>Vui lòng chờ quản lý xác nhận.</p>
- <button
+<button
   onClick={() => {
-    handleBooking(selectedCourt);
+
+const newBooking = {
+  id: Date.now(),
+  customerName: "Khách",
+  courtId: selectedCourt.id,
+  courtName: selectedCourt.name,
+  date: selectedDate,
+  hour: selectedHour,
+  duration: duration,
+  total: totalPrice,
+  paymentImage: paymentProof[selectedCourt.id],
+  status: "pending"
+};
+
+    handleBooking(newBooking);
+
     setShowSuccess(false);
+
+    setSelectedCourt(null);
+    setSelectedDate("");
+    setSelectedHour("");
+    setDuration(1);
+    setShowDepositStep(false);
+
   }}
 >
   Đóng
