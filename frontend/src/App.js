@@ -134,6 +134,11 @@ const handleAvatarChange = (e) => {
   const unreadCount = bookingRequests.filter(
     req => req.status === "pending"
   ).length;
+  
+useEffect(() => {
+  const savedBookings = JSON.parse(localStorage.getItem("bookingHistory")) || [];
+  setBookingRequests(savedBookings);
+}, []);
 
   useEffect(() => {
     const savedOtp = localStorage.getItem("generatedOtp");
@@ -511,28 +516,32 @@ useEffect(() => {
   };
 
     // --- BỔ SUNG LOGIC ĐẶT SÂN ---
-const handleBooking = (booking) => {
+const handleBooking = (newBooking) => {
 
-  const sameDayBookings = bookingRequests.filter(
-    (b) =>
-      b.customerName === booking.customerName &&
-      b.date === booking.date &&
-      b.status !== "rejected"
+  // lấy lịch sử cũ
+  const oldBookings = JSON.parse(localStorage.getItem("bookingHistory")) || [];
+
+  // lọc những booking cùng ngày của user
+  const todayBookings = oldBookings.filter(
+    (b) => b.customerName === newBooking.customerName && b.date === newBooking.date
   );
 
-  if (sameDayBookings.length >= 2) {
-    alert("Mỗi khách chỉ được đặt tối đa 2 sân trong 1 ngày!");
+  // giới hạn 2 lần / ngày
+  if (todayBookings.length >= 2) {
+    alert("Một khách chỉ được đặt tối đa 2 lần trong ngày!");
     return;
   }
 
-  const updated = [...bookingRequests, booking];
+  // thêm booking mới
+  const updatedBookings = [...oldBookings, newBooking];
 
-  setBookingRequests(updated);
+  // lưu localStorage
+  localStorage.setItem("bookingHistory", JSON.stringify(updatedBookings));
 
-  localStorage.setItem(
-    "bookingRequests",
-    JSON.stringify(updated)
-  );
+  // cập nhật state
+  setBookingRequests(updatedBookings);
+
+  alert("Đặt sân thành công!");
 };
 
   const isCourtPlaying = (booking) => {
