@@ -1,113 +1,147 @@
-import React from "react";
+import React, { useState } from "react";
 
-export default function BookingHistory({
+export default function AdminBookingRequests({
+  
   bookingRequests,
-  user,
-  cancelBooking,
-  adminPhone
+  approveBooking,
+  rejectBooking
 }) {
 
- const myBookings = bookingRequests.filter(
-  req => req.customerName === user?.username
-);
+  const isBookingExpired = (req) => {
+  const now = new Date();
 
-  console.log("User:", user);
-console.log("Bookings:", bookingRequests);
+  const startHour = parseInt(req.hour);
+  const duration = req.duration || 1;
 
+  const start = new Date(req.date + " " + startHour + ":00");
+  const end = new Date(start.getTime() + duration * 60 * 60 * 1000);
+
+  return now > end;
+};
+
+const isCourtPlaying = (req) => {
+  const nowHour = new Date().getHours();
+
+  const startHour = parseInt(req.hour);
+  const endHour = startHour + (req.duration || 1);
+
+  return (
+    req.status === "approved" &&
+    nowHour >= startHour &&
+    nowHour < endHour
+  );
+};
+const [expandedId, setExpandedId] = useState(null);
   return (
     <section style={{ padding: "40px 10%" }}>
       <h2 style={{ color: "var(--green)" }}>
-        LỊCH SỬ ĐẶT SÂN
+        YÊU CẦU ĐẶT SÂN MỚI
       </h2>
 
-      {myBookings.length === 0 ? (
-        <p>📭 Bạn chưa có yêu cầu đặt sân nào.</p>
+      {bookingRequests.length === 0 ? (
+        <p>📭 Chưa có yêu cầu nào.</p>
       ) : (
         <table className="admin-table">
           <thead>
-            <tr>
-              <th>Sân</th>
-              <th>Ngày</th>
-              <th>Giờ bắt đầu</th>
-              <th>Giờ kết thúc</th>
-              <th>Số giờ</th>
-              <th>Tổng tiền</th>
-              <th>Trạng thái</th>
-              <th>Hành động</th>
-            </tr>
-          </thead>
+  <tr>
+    <th>Khách hàng</th>
+    <th>Sân</th>
+    <th>Ngày</th>
+    <th>Giờ</th>
+    <th>Trạng thái</th>
+    <th>Chi tiết</th>
+  </tr>
+</thead>
 
-          <tbody>
-            {myBookings.map(req => {
+         <tbody>
+  {bookingRequests
+  .filter(req => !isBookingExpired(req))
+  .map(req => {
 
-              const startHour = parseInt(req.hour);
-              const duration = req.duration || 1;
-              const endHour = startHour + duration;
+    const startHour = parseInt(req.hour);
+    const duration = req.duration || 1;
+    const endHour = startHour + duration;
+    const isOpen = expandedId === req.id;
 
-              return (
-                <tr key={req.id}>
-                  <td>{req.courtName}</td>
-                  <td>{req.date}</td>
-                  <td>{startHour}:00</td>
-                  <td>{endHour}:00</td>
-                  <td>{duration} giờ</td>
+    return (
+      <React.Fragment key={req.id}>
 
-                  <td>
-                    {req.total
-                      ? req.total.toLocaleString() + " VNĐ"
-                      : "Chưa tính"}
-                  </td>
+        {/* DÒNG CHÍNH */}
+        <tr>
+          <td>{req.customerName}</td>
+          <td>{req.courtName}</td>
+          <td>{req.date}</td>
+          <td>{startHour}:00 - {endHour}:00</td>
 
-<td
-  style={{
-    fontWeight: "bold",
-    color:
-      req.status === "approved"
-        ? "green"
-        : req.status === "rejected"
-        ? "red"
-        : "orange"
-  }}
->
-  {req.status === "pending" && "Chờ duyệt"}
-  {req.status === "approved" && "Đã duyệt"}
-  {req.status === "rejected" && "Đã hủy"}
+<td className={`status-${req.status}`}>
+  {isCourtPlaying(req)
+    ? "🟢 Đang hoạt động"
+    : req.status === "pending"
+    ? "Chờ duyệt"
+    : req.status === "approved"
+    ? "Đã duyệt"
+    : "Đã hủy"}
 </td>
 
-                  <td>
-                    {req.status === "pending" && (
-                      <button
-                        className="btn-cancel"
-                        onClick={() => cancelBooking(req.id)}
-                      >
-                        Hủy yêu cầu
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
+          <td>
+            <button
+              onClick={() =>
+                setExpandedId(isOpen ? null : req.id)
+              }
+            >
+              {isOpen ? "Ẩn" : "Xem chi tiết"}
+            </button>
+          </td>
+        </tr>
+
+        {/* DÒNG CHI TIẾT */}
+        {isOpen && (
+          <tr>
+            <td colSpan="6" style={{ background: "#f5f5f5" }}>
+              <div style={{ padding: "15px" }}>
+                <p><strong>SĐT:</strong> {req.phone}</p>
+                <p><strong>Số giờ:</strong> {duration} giờ</p>
+                <p><strong>Tổng tiền:</strong> {req.total?.toLocaleString()} VNĐ</p>
+                {req.paymentImage && (
+                  <div style={{marginTop:"10px"}}>
+                    <p><strong>Ảnh chuyển tiền:</strong></p>
+                  <img
+                    src={req.paymentImage}
+                    alt="payment"
+                    style={{width:"200px",borderRadius:"8px"}}
+                  />
+                  </div>
+)}
+                {req.status === "pending" && (
+                  <div style={{ marginTop: "10px" }}>
+                    <button
+                      className="btn-approve"
+                      onClick={() => approveBooking(req.id)}
+                    >
+                      Duyệt
+                    </button>
+
+                    <button
+                      className="btn-reject"
+                      onClick={() => rejectBooking(req.id)}
+                      style={{ marginLeft: "10px" }}
+                    >
+                      Hủy
+                    </button>
+                  </div>
+                  
+                )}
+              </div>
+            </td>
+          </tr>
+        )}
+
+      </React.Fragment>
+    );
+  })}
+</tbody>
         </table>
       )}
-    <div className="contact-admin-box">
-  <p>📞 Cần hỗ trợ về đặt sân?</p>
-
-  <div className="contact-buttons">
-    <a href={`tel:${adminPhone}`} className="btn-call">
-      Gọi quản trị
-    </a>
-
-    <a
-      href={`https://zalo.me/${adminPhone}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="btn-message"
-    >
-      Chat Zalo
-    </a>
-  </div>
-</div>
     </section>
   );
 }
