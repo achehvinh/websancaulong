@@ -213,10 +213,11 @@ export default function BookingModal({
             <p><b>Chủ TK:</b> NGUYEN VAN A</p>
 
             <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => handleUpload(e, selectedCourt.id)}
-            />
+  type="file"
+  className="upload-input"
+  accept="image/*"
+  onChange={(e) => handleUpload(e, selectedCourt.id)}
+/>
 
             {paymentProof[selectedCourt.id] && (
               <>
@@ -226,15 +227,20 @@ export default function BookingModal({
                   className="proof-img"
                 />
 
-                <button
-                  className="confirm-btn"
-                  onClick={() => {
-                    handleBooking(selectedCourt);
-                    setShowSuccess(true);
-                  }}
-                >
-                  GỬI YÊU CẦU
-                </button>
+<button
+  className="confirm-btn"
+  disabled={!selectedDate || !selectedHour}
+  onClick={() => {
+    if (!selectedDate || !selectedHour) {
+      alert("Vui lòng chọn ngày và giờ trước!");
+      return;
+    }
+
+    setShowSuccess(true);
+  }}
+>
+  GỬI YÊU CẦU
+</button>
               </>
             )}
           </div>
@@ -243,11 +249,16 @@ export default function BookingModal({
         {showSuccess && (
           <div className="success-popup">
             <div className="success-box">
-              <h3>✅ Đặt sân thành công</h3>
+              <h3>✅ Yêu cầu đặt sân đã gửi thành công!</h3>
               <p>Vui lòng chờ quản lý xác nhận.</p>
-              <button onClick={() => setShowSuccess(false)}>
-                Đóng
-              </button>
+ <button
+  onClick={() => {
+    handleBooking(selectedCourt);
+    setShowSuccess(false);
+  }}
+>
+  Đóng
+</button>
             </div>
           </div>
         )}
