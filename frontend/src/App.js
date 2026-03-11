@@ -225,6 +225,15 @@ useEffect(() => {
   localStorage.setItem("avatar", avatar);
   alert("Đã lưu ảnh đại diện!");
 };
+useEffect(() => {
+
+  const savedBookings = localStorage.getItem("bookingRequests");
+
+  if (savedBookings) {
+    setBookingRequests(JSON.parse(savedBookings));
+  }
+
+}, []);
 
   useEffect(() => {
 
@@ -502,47 +511,45 @@ useEffect(() => {
   };
 
     // --- BỔ SUNG LOGIC ĐẶT SÂN ---
-const handleBooking = (court) => {
+const handleBooking = (booking) => {
 
-  if (!selectedDate || !selectedHour) {
-    alert("Vui lòng chọn ngày và giờ!");
+  const sameDayBookings = bookingRequests.filter(
+    (b) =>
+      b.customerName === booking.customerName &&
+      b.date === booking.date &&
+      b.status !== "rejected"
+  );
+
+  if (sameDayBookings.length >= 2) {
+    alert("Mỗi khách chỉ được đặt tối đa 2 sân trong 1 ngày!");
     return;
   }
 
-  const hours = [
-    "05","06","07","08","09","10","11","12",
-    "13","14","15","16","17","18","19","20","21"
-  ];
+  const updated = [...bookingRequests, booking];
 
-  const startIndex = hours.indexOf(selectedHour);
+  setBookingRequests(updated);
 
-  let total = 0;
+  localStorage.setItem(
+    "bookingRequests",
+    JSON.stringify(updated)
+  );
+};
 
-  for (let i = 0; i < duration; i++) {
-    const hour = hours[startIndex + i];
-    const hourNumber = Number(hour);
+  const isCourtPlaying = (booking) => {
 
-    const price =
-      hourNumber >= 17
-        ? Math.floor(court.price * 1.3)
-        : court.price;
+  if (booking.status !== "approved") return false;
 
-    total += price;
-  }
+  const now = new Date();
+  const today = now.toISOString().split("T")[0];
 
-  const newRequest = {
-    id: Date.now(),
-    courtId: court.id,
-    courtName: court.name,
-     phone: user.phone,
-    date: selectedDate,
-    hour: selectedHour,
-    duration: duration,
-    total: total,
-    status: "pending",
-    customerName: user.name
-  };
-  
+  if (booking.date !== today) return false;
+
+  const currentHour = now.getHours();
+
+  const start = parseInt(booking.hour);
+  const end = start + booking.duration;
+
+  return currentHour >= start && currentHour < end;
 };
 
     // --- BỔ SUNG LOGIC DUYỆT ĐƠN (ADMIN) ---
@@ -1182,14 +1189,15 @@ const handleBooking = (court) => {
     </div>
     
   )}
-     <BookingModal
+<BookingModal
+  user={user}
   selectedCourt={selectedCourt}
   selectedDate={selectedDate}
   setSelectedDate={setSelectedDate}
   selectedHour={selectedHour}
   setSelectedHour={setSelectedHour}
   duration={duration}
-  setDuration={setDuration}   // ⚠️ BẮT BUỘC PHẢI CÓ
+  setDuration={setDuration}
   showDepositStep={showDepositStep}
   setShowDepositStep={setShowDepositStep}
   handleUpload={handleUpload}
