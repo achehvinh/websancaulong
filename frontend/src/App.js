@@ -156,7 +156,6 @@ useEffect(() => {
     }
 
   }, []);
-
   const addNotification = (message) => {
 
     const newNoti = {
